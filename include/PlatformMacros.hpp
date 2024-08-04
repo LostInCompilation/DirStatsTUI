@@ -27,46 +27,20 @@ the following restrictions:
 /*                      (C) 2024 Marc Schöndorf                     */
 /*                            See license                           */
 /*                                                                  */
-/*  Main.hpp                                                        */
-/*  Created: 29.07.2024                                             */
+/*  PlatformMacros.hpp                                              */
+/*  Created: 04.08.2024                                             */
 /*------------------------------------------------------------------*/
 
-#ifndef Main_hpp
-#define Main_hpp
+#ifndef PlatformMacros_hpp
+#define PlatformMacros_hpp
 
-// *******************************************************************
-// Pre-processor settings
+// Linux (kernel)
+#if defined(__linux__)
+    #define PLATFORM_LINUX
+#elif defined(__APPLE__)
+    #define PLATFORM_APPLE
+#elif defined(_WIN32)
+    #define PLATFORM_WINDOWS
+#endif
 
-// Enable printing of platform specific error code and message,
-// additionally to the platform independent ones
-#define DST_PRINT_PLATFORM_SPECIFIC_ERROR_DESCRIPTION
-
-// *******************************************************************
-// System includes
-#include <iostream>
-#include <cstdint>
-#include <vector>
-#include <functional>
-#include <system_error>
-#include <filesystem>
-
-// *******************************************************************
-// CLI11 include
-#include "CLI11.hpp"
-
-// *******************************************************************
-// FTXUI includes
-#include <ftxui/component/component.hpp>
-#include <ftxui/component/component_options.hpp>
-#include <ftxui/component/screen_interactive.hpp>
-
-// *******************************************************************
-// Project includes
-#include "PlatformMacros.hpp"
-#include "DirStatsTUIVersion.hpp"
-#include "Error.hpp"
-#include "FileSystem.hpp"
-#include "App.hpp"
-#include "AppUI.hpp"
-
-#endif /* Main_hpp */
+#endif /* PlatformMacros_hpp */

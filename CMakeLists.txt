@@ -61,7 +61,8 @@ project("DirStatsTUI"
 # Main executable
 add_executable("${PROJECT_NAME}"
     include/CLI11.hpp
-    #include/DirStatsTUIVersion.hpp
+    include/DirStatsTUIVersion.hpp
+    include/PlatformMacros.hpp
 	include/Main.hpp
 	include/App.hpp
 	include/AppUI.hpp

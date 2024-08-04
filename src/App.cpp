@@ -50,11 +50,16 @@ int App::Run()
     cliApp.get_formatter()->label("TEXT", "STRING");
     
     // Enable Windows style arguments
-#ifdef TARGET_OS_WINDOWS
-    xxx.allow_windows_style_options();
+#ifdef PLATFORM_WINDOWS
+    cliApp.allow_windows_style_options();
 #endif
     
-    std::string startPathStr = "";
+    // Set correct default starting path depending on platform
+#ifdef PLATFORM_WINDOWS
+    std::string startPathStr = "C:\\";
+#elif defined(PLATFORM_LINUX) || defined(PLATFORM_APPLE)
+    std::string startPathStr = "/";
+#endif
     
     // Command line options
     cliApp.set_version_flag("-v,--version", GetVersionString)->group("INFO");
@@ -74,6 +79,7 @@ int App::Run()
     
     m_CLIStartingPath = CLI::to_path(startPathStr);
     
+    // Debug print
     std::cout << "Show all: " << std::boolalpha << m_CLIShowAllFiles << std::endl;
     std::cout << "Path: " << m_CLIStartingPath << std::endl;
     
