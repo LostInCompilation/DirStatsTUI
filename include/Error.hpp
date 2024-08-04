@@ -27,45 +27,42 @@ the following restrictions:
 /*                      (C) 2024 Marc Schöndorf                     */
 /*                            See license                           */
 /*                                                                  */
-/*  Main.hpp                                                        */
-/*  Created: 29.07.2024                                             */
+/*  Error.hpp                                                       */
+/*  Created: 31.07.2024                                             */
 /*------------------------------------------------------------------*/
 
-#ifndef Main_hpp
-#define Main_hpp
+#ifndef Error_hpp
+#define Error_hpp
 
-// *******************************************************************
-// Pre-processor settings
+class Error
+{
+private:
+    std::error_code m_ErrorCode;
+    
+public:
+    Error() = default;
+    
+    operator std::error_code& () { return m_ErrorCode; }
+    operator bool () const       { return IsError(); }
+    
+    bool IsError() const;
+    void PrintErrorInformation() const;
+    
+    void Clear();
+    
+    int32_t GetCode() const;
+    int32_t GetPlatformCode() const;
+    std::string GetMessage() const;
+    std::string GetPlatformMessage() const;
+    std::string GetCategoryName() const;
+    
+    // Stream out operator overload
+    friend std::ostream& operator<< (std::ostream& stream, const Error& error)
+    {
+        error.PrintErrorInformation();
+        
+        return stream;
+    }
+};
 
-// Enable printing of platform specific error code and message,
-// additionally to the platform independent ones
-#define DST_PRINT_PLATFORM_SPECIFIC_ERROR_DESCRIPTION
-
-// *******************************************************************
-// System includes
-#include <iostream>
-#include <cstdint>
-#include <vector>
-#include <functional>
-#include <system_error>
-#include <filesystem>
-
-// *******************************************************************
-// CLI11 include
-#include "CLI11.hpp"
-
-// *******************************************************************
-// FTXUI includes
-#include <ftxui/component/component.hpp>
-#include <ftxui/component/component_options.hpp>
-#include <ftxui/component/screen_interactive.hpp>
-
-// *******************************************************************
-// Project includes
-#include "DirStatsTUIVersion.hpp"
-#include "Error.hpp"
-#include "FileSystem.hpp"
-#include "App.hpp"
-#include "AppUI.hpp"
-
-#endif /* Main_hpp */
+#endif /* Error_hpp */

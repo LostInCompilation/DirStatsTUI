@@ -1,14 +1,11 @@
 ################################################################################
-#                          CMake file for new projects.                        #
+#                          CMake file for DirStatsTUI.                         #
 #                                                                              #
 # (C) 2024 Marc Schöndorf                                                      #
 # Licensed under the zlib License. See LICENSE.md                              #
 ################################################################################
 
 cmake_minimum_required(VERSION 3.25)
-
-# TODO: Check if needed for macOS
-#set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum OS X deployment version")
 
 ###########################################################
 # Set options for sub projects
@@ -39,17 +36,42 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/debug")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin/release")
 
 ###########################################################
+# FTXUI lib
+option(FTXUI_ENABLE_INSTALL OFF)
+
+include(FetchContent)
+set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
+FetchContent_Declare(ftxui
+  GIT_REPOSITORY https://github.com/ArthurSonzogni/ftxui
+  GIT_TAG        v5.0.0
+  GIT_PROGRESS   TRUE
+  GIT_SHALLOW    TRUE
+  #EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(ftxui)
+
+###########################################################
 # Our project
-project("Project"
+project("DirStatsTUI"
 	VERSION 0.1.0
-	DESCRIPTION "Project description."
+	DESCRIPTION "TUI tool to show statistics about used space, count of files and folders."
 	LANGUAGES CXX
 )
 
-# Main library
-add_library("${PROJECT_NAME}"
+# Main executable
+add_executable("${PROJECT_NAME}"
+    include/CLI11.hpp
+    #include/DirStatsTUIVersion.hpp
 	include/Main.hpp
+	include/App.hpp
+	include/AppUI.hpp
+	include/FileSystem.hpp
+	include/Error.hpp
 	src/Main.cpp
+	src/App.cpp
+	src/AppUI.cpp
+	src/FileSystem.cpp
+	src/Error.cpp
 )
 
 # The projects include directories
@@ -57,19 +79,14 @@ target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR
 
 ###########################################################
 # Project versioning
-configure_file("cmake additional/ProjectVersion.hpp.cmake" "${CMAKE_CURRENT_SOURCE_DIR}/include/ProjectVersion.hpp")
+configure_file("cmake additional/DirStatsTUIVersion.hpp.cmake" "${CMAKE_CURRENT_SOURCE_DIR}/include/DirStatsTUIVersion.hpp")
 
 ###########################################################
-# Sub-projects
-#add_subdirectory("examples/simple example")
-
-###########################################################
-# Use a lib
-#add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/lib/CLI11")
-
-#target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/lib/CLI11/include")
-#target_link_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/lib/CLI11/src")
-#target_link_libraries("${PROJECT_NAME}" PRIVATE CLI11)
+# Use FTXUI lib
+target_link_libraries(DirStatsTUI
+  #PRIVATE ftxui::screen
+  #PRIVATE ftxui::dom
+  PRIVATE ftxui::component)
 
 #############################################################
 # Optimization settings

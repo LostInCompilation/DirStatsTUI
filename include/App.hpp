@@ -27,45 +27,34 @@ the following restrictions:
 /*                      (C) 2024 Marc Schöndorf                     */
 /*                            See license                           */
 /*                                                                  */
-/*  Main.hpp                                                        */
-/*  Created: 29.07.2024                                             */
+/*  App.hpp                                                         */
+/*  Created: 03.08.2024                                             */
 /*------------------------------------------------------------------*/
 
-#ifndef Main_hpp
-#define Main_hpp
+#ifndef App_hpp
+#define App_hpp
 
-// *******************************************************************
-// Pre-processor settings
+class App
+{
+private:
+    int              m_ArgC = 0;
+    char**           m_ArgV = nullptr;
+    
+    bool             m_CLIShowAllFiles = false;
+    FileSystem::Path m_CLIStartingPath = "";
+    
+public:
+    App(int argc, char** argv);
+    
+    int Run();
+    
+    // Version info
+    static int32_t GetVersionMajor() noexcept;
+    static int32_t GetVersionMinor() noexcept;
+    static int32_t GetVersionPatch() noexcept;
+    static std::string GetVersionString() noexcept;
+    static std::string GetAppName() noexcept;
+    static std::string GetDescription() noexcept;
+};
 
-// Enable printing of platform specific error code and message,
-// additionally to the platform independent ones
-#define DST_PRINT_PLATFORM_SPECIFIC_ERROR_DESCRIPTION
-
-// *******************************************************************
-// System includes
-#include <iostream>
-#include <cstdint>
-#include <vector>
-#include <functional>
-#include <system_error>
-#include <filesystem>
-
-// *******************************************************************
-// CLI11 include
-#include "CLI11.hpp"
-
-// *******************************************************************
-// FTXUI includes
-#include <ftxui/component/component.hpp>
-#include <ftxui/component/component_options.hpp>
-#include <ftxui/component/screen_interactive.hpp>
-
-// *******************************************************************
-// Project includes
-#include "DirStatsTUIVersion.hpp"
-#include "Error.hpp"
-#include "FileSystem.hpp"
-#include "App.hpp"
-#include "AppUI.hpp"
-
-#endif /* Main_hpp */
+#endif /* App_hpp */

@@ -27,45 +27,22 @@ the following restrictions:
 /*                      (C) 2024 Marc Schöndorf                     */
 /*                            See license                           */
 /*                                                                  */
-/*  Main.hpp                                                        */
-/*  Created: 29.07.2024                                             */
+/*  AppUI.hpp                                                       */
+/*  Created: 30.07.2024                                             */
 /*------------------------------------------------------------------*/
 
-#ifndef Main_hpp
-#define Main_hpp
+#ifndef AppUI_hpp
+#define AppUI_hpp
 
-// *******************************************************************
-// Pre-processor settings
+class AppUI : public ftxui::ComponentBase
+{
+private:
+    std::function<void()> m_QuitFunction;
+    
+    
+public:
+    AppUI() = default;
+};
 
-// Enable printing of platform specific error code and message,
-// additionally to the platform independent ones
-#define DST_PRINT_PLATFORM_SPECIFIC_ERROR_DESCRIPTION
 
-// *******************************************************************
-// System includes
-#include <iostream>
-#include <cstdint>
-#include <vector>
-#include <functional>
-#include <system_error>
-#include <filesystem>
-
-// *******************************************************************
-// CLI11 include
-#include "CLI11.hpp"
-
-// *******************************************************************
-// FTXUI includes
-#include <ftxui/component/component.hpp>
-#include <ftxui/component/component_options.hpp>
-#include <ftxui/component/screen_interactive.hpp>
-
-// *******************************************************************
-// Project includes
-#include "DirStatsTUIVersion.hpp"
-#include "Error.hpp"
-#include "FileSystem.hpp"
-#include "App.hpp"
-#include "AppUI.hpp"
-
-#endif /* Main_hpp */
+#endif /* AppUI_hpp */

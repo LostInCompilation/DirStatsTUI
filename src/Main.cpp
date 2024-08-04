@@ -41,8 +41,55 @@ void MenuEnterEvent()
     exitFunction();
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    // Create App and run it
+    std::unique_ptr<App> app = std::make_unique<App>(argc, argv);
+    const int result = app->Run();
+    
+    return result;
+    
+    
+    
+    
+    // Our file system
+    FileSystem fs;
+    const FileSystem::Path path = "/Users/marc/Desktop/iMessage Export 04.08.2024";
+    
+    // Get whole volume space info
+    uintmax_t capacity;
+    uintmax_t free;
+    uintmax_t available;
+    if(!fs.GetSpaceInfo("/", capacity, free, available))
+    {
+        std::cout << fs.GetLastError() << std::endl;
+        return -1;
+    }
+    
+    std::cout << "Capacity:  " << std::setprecision(4) << static_cast<float>(capacity) / 1000.0f / 1000.0f / 1000.0f << "GB" << std::endl;
+    std::cout << "Free:      " << std::setprecision(4) << static_cast<float>(free) / 1000.0f / 1000.0f / 1000.0f << "GB" << std::endl;
+    std::cout << "Available: " << std::setprecision(4) << static_cast<float>(available) / 1000.0f / 1000.0f / 1000.0f << "GB" << std::endl << std::endl;
+    
+    // Get size of every file and directory inside path
+    std::unordered_map<FileSystem::Path, uintmax_t> directorySizes;
+    uintmax_t totalSize = 0;
+    
+    if(!fs.GetSizesOfDirectoryRecursively(path, directorySizes, totalSize))
+    {
+        std::cout << fs.GetLastError() << std::endl;
+        return -1;
+    }
+    
+    std::cout << std::endl << "Total Size: " << static_cast<float>(totalSize) / 1000.0f / 1000.0f << "MB" << std::endl;
+    
+    // Create our App GUI
+    std::unique_ptr<AppUI> appUI = std::make_unique<AppUI>();
+
+    
+    return 0;
+    
+    
+    
     ftxui::ScreenInteractive screen = ftxui::ScreenInteractive::Fullscreen();
     exitFunction = screen.ExitLoopClosure();
     
