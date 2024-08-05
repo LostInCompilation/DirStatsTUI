@@ -67,7 +67,7 @@ add_executable("${PROJECT_NAME}"
 	include/App.hpp
 	include/AppUI.hpp
 	include/FileSystem.hpp
-	include/Error.hpp
+    include/Error.hpp
 	src/Main.cpp
 	src/App.cpp
 	src/AppUI.cpp

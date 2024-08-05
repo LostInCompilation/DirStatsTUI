@@ -39,17 +39,15 @@ App::App(int argc, char** argv)
 {
 }
 
-int App::Run()
+int App::ParseCommandLine()
 {
     // Parse command line
     CLI::App cliApp(GetDescription(), GetAppName());
     m_ArgV = cliApp.ensure_utf8(m_ArgV); // For Unicode support on all platforms
 
     // Settings
-    //cliApp.footer("Footer");
+    cliApp.footer("Footer");
     cliApp.get_formatter()->label("TEXT", "STRING");
-    
-    // Enable Windows style arguments
 #ifdef PLATFORM_WINDOWS
     cliApp.allow_windows_style_options();
 #endif
@@ -62,22 +60,30 @@ int App::Run()
 #endif
     
     // Command line options
-    cliApp.set_version_flag("-v,--version", GetVersionString)->group("INFO");
-    cliApp.set_help_flag("-h,--help")->group("INFO");
-    
-    cliApp.add_flag("-a,--all", m_CLIShowAllFiles, "Show hidden files")->group("SETTINGS");
     cliApp.add_option("-p,--path", startPathStr, "Path to start scanning in");
+    cliApp.add_flag("-a,--all", m_CLIShowAllFiles, "Show hidden files");//->group("SETTINGS");
     
-    try
-    {
+    cliApp.set_version_flag("-v,--version", GetVersionString)->group("INFO");
+    cliApp.set_help_flag("-h,--help", "Display help and exit")->group("INFO");
+    
+    try {
         cliApp.parse(m_ArgC, m_ArgV);
     }
-    catch (const CLI::ParseError& e)
-    {
+    catch (const CLI::ParseError& e) {
         return cliApp.exit(e);
     }
     
     m_CLIStartingPath = CLI::to_path(startPathStr);
+    
+    return 0;
+}
+
+int App::Run()
+{
+    // Parse command line
+    const int result = ParseCommandLine();
+    if(result != 0)
+        return result;
     
     // Debug print
     std::cout << "Show all: " << std::boolalpha << m_CLIShowAllFiles << std::endl;

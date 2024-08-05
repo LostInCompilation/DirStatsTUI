@@ -31,6 +31,17 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
+/*------------------------------------------------------------------*/
+/*                                                                  */
+/*                    Modified by Marc Schöndorf                    */
+/*                                                                  */
+/*                                                                  */
+/* Implemented the better Help Formatter as                         */
+/* proposed in my Pull Request:                                     */
+/* https://github.com/CLIUtils/CLI11/pull/866                       */
+/*------------------------------------------------------------------*/
+
 #pragma once
 
 // Standard combined includes:
@@ -675,6 +686,15 @@ CLI11_INLINE std::string extract_binary_string(const std::string &escaped_string
 /// process a quoted string, remove the quotes and if appropriate handle escaped characters
 CLI11_INLINE bool process_quoted_string(std::string &str, char string_char = '\"', char literal_char = '\'');
 
+
+/// This function formats the given text as a paragraph with fixed width and applies correct line wrapping
+/// with a custom line prefix. The paragraph will get streamed to the given ostrean.
+CLI11_INLINE std::ostream &streamOutAsParagraph(std::ostream &out,
+                                                const std::string &text,
+                                                std::size_t paragraphWidth,
+                                                const std::string &linePrefix = "",
+                                                bool skipPrefixOnFirstLine = false);
+
 }  // namespace detail
 
 
@@ -1229,6 +1249,39 @@ std::string get_environment_value(const std::string &env_name) {
     }
 #endif
     return ename_string;
+}
+
+// *******************************************************************************************
+// New "streamOutAsParagraph" function, changed according to PR mentioned under the copyright
+CLI11_INLINE std::ostream &streamOutAsParagraph(std::ostream &out,
+                                                const std::string &text,
+                                                std::size_t paragraphWidth,
+                                                const std::string &linePrefix,
+                                                bool skipPrefixOnFirstLine) {
+    if(!skipPrefixOnFirstLine)
+        out << linePrefix;  // First line prefix
+
+    std::istringstream lss(text);
+    std::string line = "";
+    while(std::getline(lss, line)) {
+        std::istringstream iss(line);
+        std::string word = "";
+        std::size_t charsWritten = 0;
+
+        while(iss >> word) {
+            if(word.length() + charsWritten > paragraphWidth) {
+                out << std::endl << linePrefix;
+                charsWritten = 0;
+            }
+
+            out << word << " ";
+            charsWritten += word.length() + 1;
+        }
+
+        if(!lss.eof())
+            out << std::endl << linePrefix;
+    }
+    return out;
 }
 
 }  // namespace detail
@@ -4835,8 +4888,17 @@ class FormatterBase {
     /// @name Options
     ///@{
 
-    /// The width of the first column
+    /// The width of the left column (options/flags/subcommands)
     std::size_t column_width_{30};
+
+    /// The width of the right column (description of options/flags/subcommands)
+    std::size_t right_column_width_{65};
+
+    /// The width of the description paragraph at the top of help
+    std::size_t description_paragraph_width_{80};
+
+    /// The width of the footer paragraph
+    std::size_t footer_paragraph_width_{80};
 
     /// @brief The required help printout labels (user changeable)
     /// Values are Needs, Excludes, etc.
@@ -4866,8 +4928,18 @@ class FormatterBase {
     /// Set the "REQUIRED" label
     void label(std::string key, std::string val) { labels_[key] = val; }
 
-    /// Set the column width
+    /// Set the left column width (options/flags/subcommands)
     void column_width(std::size_t val) { column_width_ = val; }
+
+    /// Set the right column width (description of options/flags/subcommands)
+    void right_column_width(std::size_t val) { right_column_width_ = val; }
+
+    /// Set the description paragraph width at the top of help
+    void description_paragraph_width(std::size_t val) { description_paragraph_width_ = val; }
+
+    /// Set the footer paragraph width
+    void footer_paragraph_width(std::size_t val) { footer_paragraph_width_ = val; }
+
 
     ///@}
     /// @name Getters
@@ -4880,8 +4952,17 @@ class FormatterBase {
         return labels_.at(key);
     }
 
-    /// Get the current column width
+    /// Get the current left column width (options/flags/subcommands)
     CLI11_NODISCARD std::size_t get_column_width() const { return column_width_; }
+
+    /// Get the current right column width (description of options/flags/subcommands)
+    CLI11_NODISCARD std::size_t get_right_column_width() const { return right_column_width_; }
+
+    /// Get the current description paragraph width at the top of help
+    CLI11_NODISCARD std::size_t get_description_paragraph_width() const { return description_paragraph_width_; }
+
+    /// Get the current footer paragraph width
+    CLI11_NODISCARD std::size_t get_footer_paragraph_width() const { return footer_paragraph_width_; }
 
     ///@}
 };
@@ -4956,12 +5037,7 @@ class Formatter : public FormatterBase {
     ///@{
 
     /// This prints out an option help line, either positional or optional form
-    virtual std::string make_option(const Option *opt, bool is_positional) const {
-        std::stringstream out;
-        detail::format_help(
-            out, make_option_name(opt, is_positional) + make_option_opts(opt), make_option_desc(opt), column_width_);
-        return out.str();
-    }
+    virtual std::string make_option(const Option *opt, bool is_positional) const;
 
     /// @brief This is the name part of an option, Default: left column
     virtual std::string make_option_name(const Option *, bool) const;
@@ -5007,7 +5083,7 @@ template <typename CRTP> class OptionBase {
 
   protected:
     /// The group membership
-    std::string group_ = std::string("Options");
+    std::string group_ = std::string("OPTIONS");
 
     /// True if this is a required option
     bool required_{false};
@@ -6665,7 +6741,7 @@ class App {
     App *parent_{nullptr};
 
     /// The group membership INHERITABLE
-    std::string group_{"Subcommands"};
+    std::string group_{"SUBCOMMANDS"};
 
     /// Alias names for the subcommand
     std::vector<std::string> aliases_{};
@@ -10575,18 +10651,18 @@ ConfigBase::to_config(const App *app, bool default_also, bool write_description,
 
     std::vector<std::string> groups = app->get_groups();
     bool defaultUsed = false;
-    groups.insert(groups.begin(), std::string("Options"));
+    groups.insert(groups.begin(), std::string("OPTIONS"));
     if(write_description && (app->get_configurable() || app->get_parent() == nullptr || app->get_name().empty())) {
         out << commentLead << detail::fix_newlines(commentLead, app->get_description()) << '\n';
     }
     for(auto &group : groups) {
-        if(group == "Options" || group.empty()) {
+        if(group == "OPTIONS" || group.empty()) {
             if(defaultUsed) {
                 continue;
             }
             defaultUsed = true;
         }
-        if(write_description && group != "Options" && !group.empty()) {
+        if(write_description && group != "OPTIONS" && !group.empty()) {
             out << '\n' << commentLead << group << " Options\n";
         }
         for(const Option *opt : app->get_options({})) {
@@ -10594,7 +10670,7 @@ ConfigBase::to_config(const App *app, bool default_also, bool write_description,
             // Only process options that are configurable
             if(opt->get_configurable()) {
                 if(opt->get_group() != group) {
-                    if(!(group == "Options" && opt->get_group().empty())) {
+                    if(!(group == "OPTIONS" && opt->get_group().empty())) {
                         continue;
                     }
                 }
@@ -10735,7 +10811,7 @@ CLI11_INLINE std::string Formatter::make_positionals(const App *app) const {
     if(opts.empty())
         return {};
 
-    return make_group(get_label("Positionals"), true, opts);
+    return make_group(get_label("POSITIONALS"), true, opts);
 }
 
 CLI11_INLINE std::string Formatter::make_groups(const App *app, AppFormatMode mode) const {
@@ -10754,8 +10830,9 @@ CLI11_INLINE std::string Formatter::make_groups(const App *app, AppFormatMode mo
         if(!group.empty() && !opts.empty()) {
             out << make_group(group, false, opts);
 
-            if(group != groups.back())
-                out << "\n";
+            // Removed double newline between groups for consistency of help text
+            // if(group != groups.back())
+            //    out << "\n";
         }
     }
 
@@ -10791,13 +10868,19 @@ CLI11_INLINE std::string Formatter::make_description(const App *app) const {
 CLI11_INLINE std::string Formatter::make_usage(const App *app, std::string name) const {
     std::string usage = app->get_usage();
     if(!usage.empty()) {
-        return usage + "\n";
+        return usage + "\n\n";
     }
 
     std::stringstream out;
+    out << "\n";
+    
+    //out << get_label("Usage") << ":" << (name.empty() ? "" : " ") << name;
 
-    out << get_label("Usage") << ":" << (name.empty() ? "" : " ") << name;
-
+    if(name.empty())
+        out << get_label("Usage") << ":";
+    else
+        out << name;
+    
     std::vector<std::string> groups = app->get_groups();
 
     // Print an Options badge if any options exist
@@ -10830,7 +10913,7 @@ CLI11_INLINE std::string Formatter::make_usage(const App *app, std::string name)
             << (app->get_require_subcommand_min() == 0 ? "]" : "");
     }
 
-    out << '\n';
+    out << "\n\n";
 
     return out.str();
 }
@@ -10840,7 +10923,7 @@ CLI11_INLINE std::string Formatter::make_footer(const App *app) const {
     if(footer.empty()) {
         return std::string{};
     }
-    return "\n" + footer + "\n";
+    return "\n" + footer + "\n\n";
 }
 
 CLI11_INLINE std::string Formatter::make_help(const App *app, std::string name, AppFormatMode mode) const {
@@ -10852,17 +10935,17 @@ CLI11_INLINE std::string Formatter::make_help(const App *app, std::string name, 
 
     std::stringstream out;
     if((app->get_name().empty()) && (app->get_parent() != nullptr)) {
-        if(app->get_group() != "Subcommands") {
+        if(app->get_group() != "SUBCOMMANDS") {
             out << app->get_group() << ':';
         }
     }
 
-    out << make_description(app);
     out << make_usage(app, name);
+    detail::streamOutAsParagraph(out, make_description(app), description_paragraph_width_, "  ");  // Format description as paragraph
     out << make_positionals(app);
     out << make_groups(app, mode);
     out << make_subcommands(app, mode);
-    out << make_footer(app);
+    detail::streamOutAsParagraph(out, make_footer(app), footer_paragraph_width_);  // Format footer as paragraph
 
     return out.str();
 }
@@ -10936,6 +11019,98 @@ CLI11_INLINE std::string Formatter::make_expanded(const App *sub) const {
 
     // Indent all but the first line (the name)
     return detail::find_and_replace(tmp, "\n", "\n  ") + "\n";
+}
+
+// *******************************************************************************************
+// New "make_option" function, changed according to PR mentioned under the copyright
+CLI11_INLINE std::string Formatter::make_option(const Option *opt, bool is_positional) const {
+    std::stringstream out;
+    if(is_positional) {
+        const std::string left = "  " + make_option_name(opt, true) + make_option_opts(opt);
+        const std::string desc = make_option_desc(opt);
+        out << std::setw(static_cast<int>(column_width_)) << std::left << left;
+
+        if(!desc.empty()) {
+            bool skipFirstLinePrefix = true;
+            if(left.length() >= column_width_) {
+                out << "\n";
+                skipFirstLinePrefix = false;
+            }
+            detail::streamOutAsParagraph(
+                out, desc, right_column_width_, std::string(column_width_, ' '), skipFirstLinePrefix);
+        }
+    } else {
+        const std::string namesCombined = make_option_name(opt, false);
+        const std::string opts = make_option_opts(opt);
+        const std::string desc = make_option_desc(opt);
+
+        // Split all names at comma and sort them into short names and long names
+        const auto names = detail::split(namesCombined, ',');
+        std::vector<std::string> vshortNames;
+        std::vector<std::string> vlongNames;
+        std::for_each(names.begin(), names.end(), [&vshortNames, &vlongNames](const std::string &name) {
+            if(name.find("--", 0) != std::string::npos)
+                vlongNames.push_back(name);
+            else
+                vshortNames.push_back(name);
+        });
+
+        // Assemble short and long names
+        std::string shortNames = detail::join(vshortNames, ", ");
+        std::string longNames = detail::join(vlongNames, ", ");
+
+        // Calculate setw sizes
+        const std::size_t shortNamesColumnWidth = column_width_ / 3;  // 33% left for short names
+        const std::size_t longNamesColumnWidth = static_cast<std::size_t>(std::ceil(
+            static_cast<float>(column_width_) / 3.0f * 2.0f));  // 66% right for long names and options, ceil result
+        std::size_t shortNamesOverSize = 0;
+
+        // Print short names
+        if(shortNames.length() > 0) {
+            shortNames = "  " + shortNames;  // Indent
+            if(longNames.length() == 0 && opts.length() > 0)
+                shortNames += opts;  // Add opts if only short names and no long names
+            if(longNames.length() > 0)
+                shortNames += ",";
+            if(shortNames.length() >= shortNamesColumnWidth) {
+                shortNames += " ";
+                shortNamesOverSize = shortNames.length() - shortNamesColumnWidth;
+            }
+            out << std::setw(static_cast<int>(shortNamesColumnWidth)) << std::left << shortNames;
+        } else {
+            out << std::setw(static_cast<int>(shortNamesColumnWidth)) << std::left << "";
+        }
+
+        // Adjust long name column width in case of short names column reaching into long names column
+        shortNamesOverSize =
+            (std::min)(shortNamesOverSize, longNamesColumnWidth);  // Prevent negative result with unsigned integers
+        const std::size_t adjustedLongNamesColumnWidth = longNamesColumnWidth - shortNamesOverSize;
+
+        // Print long names
+        if(longNames.length() > 0) {
+            if(opts.length() > 0)
+                longNames += opts;
+            if(longNames.length() >= adjustedLongNamesColumnWidth)
+                longNames += " ";
+
+            out << std::setw(static_cast<int>(adjustedLongNamesColumnWidth)) << std::left << longNames;
+        } else {
+            out << std::setw(static_cast<int>(adjustedLongNamesColumnWidth)) << std::left << "";
+        }
+
+        if(!desc.empty()) {
+            bool skipFirstLinePrefix = true;
+            if(out.str().length() > column_width_) {
+                out << "\n";
+                skipFirstLinePrefix = false;
+            }
+            detail::streamOutAsParagraph(
+                out, desc, right_column_width_, std::string(column_width_, ' '), skipFirstLinePrefix);
+        }
+    }
+
+    out << "\n";
+    return out.str();
 }
 
 CLI11_INLINE std::string Formatter::make_option_name(const Option *opt, bool is_positional) const {

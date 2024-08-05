@@ -43,6 +43,8 @@ private:
     bool             m_CLIShowAllFiles = false;
     FileSystem::Path m_CLIStartingPath = "";
     
+    int ParseCommandLine();
+    
 public:
     App(int argc, char** argv);
     
