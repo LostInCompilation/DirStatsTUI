@@ -66,7 +66,7 @@ the following restrictions:
 #include "DirStatsTUIVersion.hpp"
 #include "Error.hpp"
 #include "FileSystem.hpp"
-#include "App.hpp"
 #include "AppUI.hpp"
+#include "App.hpp"
 
 #endif /* Main_hpp */

@@ -32,3 +32,33 @@ the following restrictions:
 /*------------------------------------------------------------------*/
 
 #include "Main.hpp"
+
+
+ftxui::Element AppUI::Render()
+{
+    using namespace ftxui;
+
+    return window(text(L"REPLACE ME") | bold | center, text("Content"));
+}
+
+bool AppUI::OnEvent(ftxui::Event event)
+{
+    if (event == ftxui::Event::Character('h'))
+    {
+        return true;
+    }
+
+    if (event == ftxui::Event::Escape)
+    {
+        m_QuitFunction();
+        return true;
+    }
+
+    if (event == ftxui::Event::Character('q'))
+    {
+        m_QuitFunction();
+        return true;
+    }
+
+    return ComponentBase::OnEvent(event);
+}

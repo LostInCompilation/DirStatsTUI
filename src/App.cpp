@@ -36,20 +36,25 @@ the following restrictions:
 App::App(int argc, char** argv)
     : m_ArgC(argc)
     , m_ArgV(argv)
+    , m_Screen(ftxui::ScreenInteractive::Fullscreen())
 {
+    m_CLIApp = std::make_unique<CLI::App>(GetDescription(), GetAppName());
+    m_AppUI = std::make_shared<AppUI>();
+    
+    // Register quit function
+    m_AppUI->SetQuitFunction(m_Screen.ExitLoopClosure());
 }
 
-int App::ParseCommandLine()
+void App::ParseCommandLine()
 {
     // Parse command line
-    CLI::App cliApp(GetDescription(), GetAppName());
-    m_ArgV = cliApp.ensure_utf8(m_ArgV); // For Unicode support on all platforms
+    m_ArgV = m_CLIApp->ensure_utf8(m_ArgV); // For Unicode support on all platforms
 
     // Settings
-    cliApp.footer("Footer");
-    cliApp.get_formatter()->label("TEXT", "STRING");
+    m_CLIApp->footer("Footer");
+    m_CLIApp->get_formatter()->label("TEXT", "STRING");
 #ifdef PLATFORM_WINDOWS
-    cliApp.allow_windows_style_options();
+    m_CLIApp->allow_windows_style_options();
 #endif
     
     // Set correct default starting path depending on platform
@@ -60,34 +65,34 @@ int App::ParseCommandLine()
 #endif
     
     // Command line options
-    cliApp.add_option("-p,--path", startPathStr, "Path to start scanning in");
-    cliApp.add_flag("-a,--all", m_CLIShowAllFiles, "Show hidden files");//->group("SETTINGS");
+    m_CLIApp->add_option("-p,--path", startPathStr, "Path to start scanning in");
+    m_CLIApp->add_flag("-a,--all", m_CLIShowAllFiles, "Show hidden files");//->group("SETTINGS");
     
-    cliApp.set_version_flag("-v,--version", GetVersionString)->group("INFO");
-    cliApp.set_help_flag("-h,--help", "Display help and exit")->group("INFO");
+    m_CLIApp->set_version_flag("-v,--version", GetVersionString)->group("INFO");
+    m_CLIApp->set_help_flag("-h,--help", "Display help and exit")->group("INFO");
     
-    try {
-        cliApp.parse(m_ArgC, m_ArgV);
-    }
-    catch (const CLI::ParseError& e) {
-        return cliApp.exit(e);
-    }
+    // Parse
+    m_CLIApp->parse(m_ArgC, m_ArgV); // May throw CLI::ParseError
     
     m_CLIStartingPath = CLI::to_path(startPathStr);
-    
-    return 0;
 }
 
 int App::Run()
 {
     // Parse command line
-    const int result = ParseCommandLine();
-    if(result != 0)
-        return result;
+    try {
+        ParseCommandLine();
+    }
+    catch (const CLI::ParseError& e) {
+        return m_CLIApp->exit(e);
+    }
     
     // Debug print
     std::cout << "Show all: " << std::boolalpha << m_CLIShowAllFiles << std::endl;
     std::cout << "Path: " << m_CLIStartingPath << std::endl;
+    
+    // Run UI
+    m_Screen.Loop(m_AppUI);
     
     return 0;
 }

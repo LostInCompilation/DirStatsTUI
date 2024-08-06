@@ -142,17 +142,16 @@ bool FileSystem::GetSizesOfDirectoryRecursively(const Path& path, std::unordered
     std::vector<DirectoryEntry> subDirElements;
     
     // Iterate all elements of the requested path
-    for(DirectoryEntry i : currentPathElements)
+    for(DirectoryEntry& i : currentPathElements)
     {
         // Iterate element recursively if it is a directory
         if(i.isDirectory)
         {
-            //std::vector<DirectoryEntry> subDirElements;
             if(!IterateDirectoryRecursively(i.path, subDirElements))
                 return false;
             
             // Sum up all sizes
-            for(DirectoryEntry sub : subDirElements)
+            for(DirectoryEntry& sub : subDirElements)
             {
                 if(sub.fileSize != UINTMAX_MAX)
                     totalSubDirSize += sub.fileSize;
@@ -163,6 +162,7 @@ bool FileSystem::GetSizesOfDirectoryRecursively(const Path& path, std::unordered
             out_totalSize += totalSubDirSize;
             
             totalSubDirSize = 0;
+            subDirElements.clear();
         }
         else
         {

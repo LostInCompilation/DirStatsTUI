@@ -39,9 +39,13 @@ class AppUI : public ftxui::ComponentBase
 private:
     std::function<void()> m_QuitFunction;
     
-    
 public:
     AppUI() = default;
+    
+    ftxui::Element Render() override;
+    bool OnEvent(ftxui::Event event) override;
+    
+    void SetQuitFunction(std::function<void()> quit) { m_QuitFunction = quit; }
 };
 
 

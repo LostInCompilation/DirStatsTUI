@@ -40,10 +40,16 @@ private:
     int              m_ArgC = 0;
     char**           m_ArgV = nullptr;
     
-    bool             m_CLIShowAllFiles = false;
-    FileSystem::Path m_CLIStartingPath = "";
+    // CLI
+    std::unique_ptr<CLI::App>   m_CLIApp = nullptr;
+    bool                        m_CLIShowAllFiles = false;
+    FileSystem::Path            m_CLIStartingPath = "";
     
-    int ParseCommandLine();
+    // UI
+    ftxui::ScreenInteractive    m_Screen;
+    std::shared_ptr<AppUI>      m_AppUI = nullptr;
+    
+    void ParseCommandLine();
     
 public:
     App(int argc, char** argv);
