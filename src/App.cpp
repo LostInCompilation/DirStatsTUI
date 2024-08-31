@@ -39,10 +39,7 @@ App::App(int argc, char** argv)
     , m_Screen(ftxui::ScreenInteractive::Fullscreen())
 {
     m_CLIApp = std::make_unique<CLI::App>(GetDescription(), GetAppName());
-    m_AppUI = std::make_shared<AppUI>();
-    
-    // Register quit function
-    m_AppUI->SetQuitFunction(m_Screen.ExitLoopClosure());
+    m_AppUI = std::make_shared<AppUI>(&m_Screen, m_Screen.ExitLoopClosure());
 }
 
 void App::ParseCommandLine()
@@ -87,9 +84,12 @@ int App::Run()
         return m_CLIApp->exit(e);
     }
     
-    // Debug print
-    std::cout << "Show all: " << std::boolalpha << m_CLIShowAllFiles << std::endl;
-    std::cout << "Path: " << m_CLIStartingPath << std::endl;
+    // Set arguments from CLI
+    m_AppUI->SetStartingPath(m_CLIStartingPath);
+    m_AppUI->SetShowAllFiles(m_CLIShowAllFiles);
+    
+    if(!m_AppUI->UpdateSpaceInfo())
+        return -5;
     
     // Run UI
     m_Screen.Loop(m_AppUI);

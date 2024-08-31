@@ -33,14 +33,6 @@ the following restrictions:
 
 #include "Main.hpp"
 
-// The main loop exit function
-std::function<void()> exitFunction;
-
-void MenuEnterEvent()
-{
-    exitFunction();
-}
-
 int main(int argc, char** argv)
 {
     // Create App and run it
@@ -54,7 +46,8 @@ int main(int argc, char** argv)
     
     // Our file system
     FileSystem fs;
-    const FileSystem::Path path = "/Users/marc/Desktop/iMessage Export 04.08.2024";
+    //const FileSystem::Path path = "/Users/marc/Desktop/iMessage Export 04.08.2024";
+    const FileSystem::Path path = "/Users/marc/Documents";
     
     // Get whole volume space info
     uintmax_t capacity;
@@ -71,10 +64,10 @@ int main(int argc, char** argv)
     std::cout << "Available: " << std::setprecision(4) << static_cast<float>(available) / 1000.0f / 1000.0f / 1000.0f << "GB" << std::endl << std::endl;
     
     // Get size of every file and directory inside path
-    std::unordered_map<FileSystem::Path, uintmax_t> directorySizes;
+    std::unordered_map<FileSystem::Path, FileSystem::DirectoryStats> directoryStats;
     uintmax_t totalSize = 0;
     
-    if(!fs.GetSizesOfDirectoryRecursively(path, directorySizes, totalSize))
+    if(!fs.GetSizesOfDirectoryRecursively(path, directoryStats, totalSize))
     {
         std::cout << fs.GetLastError() << std::endl;
         return -1;
@@ -82,16 +75,12 @@ int main(int argc, char** argv)
     
     std::cout << std::endl << "Total Size: " << static_cast<float>(totalSize) / 1000.0f / 1000.0f << "MB" << std::endl;
     
-    // Create our App GUI
-    std::unique_ptr<AppUI> appUI = std::make_unique<AppUI>();
-
-    
     return 0;
     
     
     
     ftxui::ScreenInteractive screen = ftxui::ScreenInteractive::Fullscreen();
-    exitFunction = screen.ExitLoopClosure();
+    //exitFunction = screen.ExitLoopClosure();
     
     // **************************************************************
     // Menu
@@ -100,7 +89,7 @@ int main(int argc, char** argv)
     
     // Menu style and options
     ftxui::MenuOption menuOption = ftxui::MenuOption::Vertical();
-    menuOption.on_enter = MenuEnterEvent;
+    //menuOption.on_enter = MenuEnterEvent;
     menuOption.entries_option.transform = [](ftxui::EntryState state)
     {
         state.label = (state.active ? "> " : "  ") + state.label;

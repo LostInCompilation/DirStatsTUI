@@ -65,11 +65,13 @@ add_executable("${PROJECT_NAME}"
     include/PlatformMacros.hpp
 	include/Main.hpp
 	include/App.hpp
+	include/MenuComponent.h
 	include/AppUI.hpp
 	include/FileSystem.hpp
     include/Error.hpp
 	src/Main.cpp
 	src/App.cpp
+	src/MenuComponent.cpp
 	src/AppUI.cpp
 	src/FileSystem.cpp
 	src/Error.cpp

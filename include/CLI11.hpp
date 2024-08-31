@@ -38,7 +38,7 @@
 /*                                                                  */
 /*                                                                  */
 /* Implemented the better Help Formatter as                         */
-/* proposed in my Pull Request:                                     */
+/* proposed in my pull-request:                                     */
 /* https://github.com/CLIUtils/CLI11/pull/866                       */
 /*------------------------------------------------------------------*/
 

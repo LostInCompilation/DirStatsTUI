@@ -52,6 +52,14 @@ public:
         bool        isRegularFile = false;
     };
     
+    struct DirectoryStats
+    {
+        bool isDirectory = false;
+        
+        uintmax_t size = 0;
+        uintmax_t count = 0;
+    };
+    
 private:
     Error   m_LastError;
     
@@ -71,7 +79,7 @@ public:
     bool    IterateDirectory(const Path& path, std::vector<DirectoryEntry>& out_iteratedDirectoryInfo); // May throw std::bad_alloc
     bool    IterateDirectoryRecursively(const Path& path, std::vector<DirectoryEntry>& out_iteratedDirectoryInfo); // May throw std::bad_alloc
     
-    bool    GetSizesOfDirectoryRecursively(const Path& path, std::unordered_map<Path, uintmax_t>& out_directorySizes, uintmax_t& out_totalSize);
+    bool    GetSizesOfDirectoryRecursively(const Path& path, std::unordered_map<Path, DirectoryStats>& out_directorySizes, uintmax_t& out_totalSize);
 };
 
 #endif /* FileSystem_hpp */

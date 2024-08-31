@@ -129,7 +129,7 @@ bool FileSystem::IterateDirectoryRecursively(const Path& path, std::vector<Direc
     return IterateDirectoryT<std::filesystem::recursive_directory_iterator>(path, out_iteratedDirectoryInfo);
 }
 
-bool FileSystem::GetSizesOfDirectoryRecursively(const Path& path, std::unordered_map<Path, uintmax_t>& out_directorySizes, uintmax_t& out_totalSize)
+bool FileSystem::GetSizesOfDirectoryRecursively(const Path& path, std::unordered_map<Path, DirectoryStats>& out_directorySizes, uintmax_t& out_totalSize)
 {
     out_totalSize = 0;
     
@@ -158,7 +158,12 @@ bool FileSystem::GetSizesOfDirectoryRecursively(const Path& path, std::unordered
             }
             
             // Add size of directory to unordered_map
-            out_directorySizes[i.path] = totalSubDirSize;
+            DirectoryStats stats;
+            stats.isDirectory = true;
+            stats.size = totalSubDirSize;
+            stats.count = subDirElements.size();
+            out_directorySizes[i.path] = stats;
+            
             out_totalSize += totalSubDirSize;
             
             totalSubDirSize = 0;
@@ -167,12 +172,17 @@ bool FileSystem::GetSizesOfDirectoryRecursively(const Path& path, std::unordered
         else
         {
             // Add size of file to unordered_map
-            out_directorySizes[i.path] = i.fileSize;
+            DirectoryStats stats;
+            stats.isDirectory = false;
+            stats.size = i.fileSize;
+            stats.count = 1;
+            out_directorySizes[i.path] = stats;
+            
             out_totalSize += i.fileSize;
         }
         
         // Debug print
-        std::cout << i.path << ": " << out_directorySizes[i.path] << "B" << std::endl;
+        std::cout << i.path << ": " << out_directorySizes[i.path].size << "B (count: " << out_directorySizes[i.path].count << ")" << std::endl;
     }
     
     return true;

@@ -49,6 +49,9 @@ the following restrictions:
 #include <functional>
 #include <system_error>
 #include <filesystem>
+//#include <future>
+#include <thread>
+#include <atomic>
 
 // *******************************************************************
 // CLI11 include
@@ -66,6 +69,7 @@ the following restrictions:
 #include "DirStatsTUIVersion.hpp"
 #include "Error.hpp"
 #include "FileSystem.hpp"
+#include "MenuComponent.hpp"
 #include "AppUI.hpp"
 #include "App.hpp"
 

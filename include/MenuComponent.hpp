@@ -27,64 +27,55 @@ the following restrictions:
 /*                      (C) 2024 Marc Schöndorf                     */
 /*                            See license                           */
 /*                                                                  */
-/*  AppUI.hpp                                                       */
-/*  Created: 30.07.2024                                             */
+/*  MenuComponent.hpp                                               */
+/*  Created: 06.08.2024                                             */
 /*------------------------------------------------------------------*/
 
-#ifndef AppUI_hpp
-#define AppUI_hpp
+#ifndef MenuComponent_hpp
+#define MenuComponent_hpp
 
-class AppUI : public ftxui::ComponentBase
+class MenuComponent : public ftxui::ComponentBase
 {
 public:
-    enum class Sorting : uint8_t
+    struct MenuEntry
     {
-        SIZE_DESCENDING = 0,
-        NAME_ASCENDING = 1,
+        std::string name = "";
+        
+        bool isDirectory = false;
+        uintmax_t count = 0;
     };
     
 private:
-    ftxui::ScreenInteractive*    m_Screen;
+    std::function<void()>   m_OnChangeFunction;
+    std::function<void()>   m_OnEnterFunction;
     
-    // File system instance
-    FileSystem          m_FileSystem;
+    ftxui::MenuEntryOption  m_EntryOptionFile = {};
+    ftxui::MenuEntryOption  m_EntryOptionDirectory = {};
     
-    // State
-    FileSystem::Path    m_StartingPath = "";
-    bool                m_ShowAllFiles = false;
-    //Sorting             m_FileSorting = Sorting::SIZE_DESCENDING;
+    std::vector<MenuEntry>  m_Entries;
+        
+    int32_t                 m_CurrentSelection = -1;
+    int32_t                 m_CurrentFocus = -1;
     
-    std::function<void()> m_QuitFunction;
-    
-    // UI
-    std::string     m_SpaceInfoText = "";
-    float           m_GaugeValueUsedSpace = 0.0f;
-    
-    // Spinner
-    std::atomic<uint32_t>   m_SpinnerValue = 0;
-    std::atomic<bool>       m_StopSpinnerThread = false;
-    std::thread             m_SpinnerUpdateThread;
-    
-    //int32_t         m_CurrentFolderSelected = 0;
-    std::shared_ptr<MenuComponent>   m_Menu;
-    
-    // Methods
-    void            UpdateSpinnerTask() noexcept;
+    bool            OnMouseEvent(ftxui::Event event);
+    bool            OnMouseWheel(ftxui::Event event);
     
 public:
-    AppUI(ftxui::ScreenInteractive* screen, std::function<void()> quit);
-    virtual ~AppUI();
+    MenuComponent();
     
-    bool            UpdateSpaceInfo();
-    
-    bool            UpdateMainView();
+    void            AddEntry(const MenuEntry& entry);
+    void            ClearEntries();
     
     ftxui::Element  Render() override;
     bool            OnEvent(ftxui::Event event) override;
     
-    void SetStartingPath(const FileSystem::Path& path) noexcept { m_StartingPath = path; }
-    void SetShowAllFiles(bool showAll) noexcept { m_ShowAllFiles = showAll; }
+    // Setter
+    void            SetOnChangeFunction(std::function<void()> func) noexcept { m_OnChangeFunction = func; }
+    void            SetOnEnterFunction(std::function<void()> func) noexcept { m_OnEnterFunction = func; }
+    
+    // Getter
+    int32_t         GetCurrentSelection() const noexcept { return m_CurrentSelection; }
+    int32_t         GetCurrentFocus() const noexcept { return m_CurrentFocus; }
 };
 
-
-#endif /* AppUI_hpp */
+#endif /* MenuComponent_hpp */
