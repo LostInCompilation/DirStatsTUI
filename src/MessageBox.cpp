@@ -150,7 +150,7 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
     }
     
     // Create dialog
-    GtkWidget* const dialog = gtk_message_dialog_new(nullptr, GTK_DIALOG_DESTROY_WITH_PARENT, mbType, buttonType, "%s\n\n%s", header, message);
+    GtkWidget* const dialog = gtk_message_dialog_new(nullptr, GTK_DIALOG_DESTROY_WITH_PARENT, mbType, buttonType, "%s\n\n%s", header.c_str(), message.c_str());
     
     // Show dialog
     const gint mbResult = gtk_dialog_run(GTK_DIALOG(dialog));
