@@ -212,6 +212,7 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
     }
     
     // Set as foreground window
+    mbType |= MB_SYSTEMMODAL;
     mbType |= MB_SETFOREGROUND;
     
     int mbResult = 0;
