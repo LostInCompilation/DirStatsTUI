@@ -123,7 +123,7 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
     }
     
     // Buttons
-    GtkButtonsType buttonType = 0;
+    GtkButtonsType buttonType = GTK_BUTTONS_OK;
     switch(buttons)
     {
         case Buttons::OK:
