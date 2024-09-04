@@ -172,7 +172,7 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
 int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
 {
     // Convert (UTF-8) std::string to Windows UTF-16
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>> converter;
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     const std::wstring wHeader = converter.from_bytes(header);
     const std::wstring wMessage = converter.from_bytes(message);
     
@@ -230,7 +230,7 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
     else
     {
         // Fallback to MessageBox without timeout
-        mbResult = MessageBoxW(nullptr, wMessage.c_str(), wHeader.c_str(), mbType);
+        mbResult = ::MessageBoxW(nullptr, wMessage.c_str(), wHeader.c_str(), mbType);
     }
     
     // Return MessageBox result

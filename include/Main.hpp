@@ -63,7 +63,9 @@ the following restrictions:
 #elif defined(PLATFORM_LINUX)
 #include <gtk/gtk.h>
 #elif defined(PLATFORM_WINDOWS)
+#define NOMINMAX
 #include <Windows.h>
+#undef ERROR
 #endif
 
 // *******************************************************************
