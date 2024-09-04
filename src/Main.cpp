@@ -35,13 +35,14 @@ the following restrictions:
 
 int main(int argc, char** argv)
 {
+    MessageBox::Show(MessageBox::Type::INFO, MessageBox::Buttons::OK, "Header", "Message", 0);
+    return 0;
+    
     // Create App and run it
     std::unique_ptr<App> app = std::make_unique<App>(argc, argv);
     const int result = app->Run();
     
     return result;
-    
-    
     
     
     // Our file system

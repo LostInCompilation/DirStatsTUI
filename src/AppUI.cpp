@@ -124,7 +124,7 @@ ftxui::Element AppUI::Render()
     auto statusLine = hbox({
                 //text(m_SpaceInfoText),
         
-                hbox({spinner(15, m_SpinnerValue), text(" Loading...")}) | bold | size(WIDTH, GREATER_THAN, 14),
+                hbox({spinner(15, m_SpinnerValue), text(" Loading...")}) | ftxui::bold | size(WIDTH, GREATER_THAN, 14),
         
                 text(onChangeFctStr) | bgcolor(Color::Yellow) | color(Color::Black) /*| flex*/ | size(WIDTH, EQUAL, 25),
         
@@ -138,7 +138,7 @@ ftxui::Element AppUI::Render()
     
     const std::wstring currentPathStr = L"Current path: " + m_StartingPath.wstring();
     
-    return window(text("DirStatsTUI") | bold | center,
+    return window(text("DirStatsTUI") | ftxui::bold | center,
                 vbox({
                     text(currentPathStr) | inverted,
                     separator(),
@@ -150,7 +150,7 @@ ftxui::Element AppUI::Render()
             })
             );
     
-    return window(text(L"REPLACE ME") | bold | center, text("Content"));
+    return window(text(L"REPLACE ME") | ftxui::bold | center, text("Content"));
 }
 
 bool AppUI::OnEvent(ftxui::Event event)

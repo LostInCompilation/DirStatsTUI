@@ -41,10 +41,15 @@ the following restrictions:
 // additionally to the platform independent ones
 #define DST_PRINT_PLATFORM_SPECIFIC_ERROR_DESCRIPTION
 
+#include "PlatformMacros.hpp"
+
 // *******************************************************************
 // System includes
 #include <iostream>
 #include <cstdint>
+#include <string>
+#include <locale>
+#include <codecvt>
 #include <vector>
 #include <functional>
 #include <system_error>
@@ -52,6 +57,14 @@ the following restrictions:
 //#include <future>
 #include <thread>
 #include <atomic>
+
+#ifdef PLATFORM_APPLE
+#include <CoreFoundation/CoreFoundation.h>
+#elif defined(PLATFORM_LINUX)
+#include <gtk/gtk.h>
+#elif defined(PLATFORM_WINDOWS)
+#include <Windows.h>
+#endif
 
 // *******************************************************************
 // CLI11 include
@@ -65,9 +78,9 @@ the following restrictions:
 
 // *******************************************************************
 // Project includes
-#include "PlatformMacros.hpp"
 #include "DirStatsTUIVersion.hpp"
 #include "Error.hpp"
+#include "MessageBox.hpp"
 #include "FileSystem.hpp"
 #include "MenuComponent.hpp"
 #include "AppUI.hpp"

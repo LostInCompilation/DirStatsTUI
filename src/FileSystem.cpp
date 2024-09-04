@@ -50,7 +50,7 @@ bool FileSystem::GetSpaceInfo(const Path& path, uintmax_t& out_capacity, uintmax
 template<typename IteratorType>
 bool FileSystem::IterateDirectoryT(const Path& path, std::vector<DirectoryEntry>& out_iteratedDirectoryInfo)
 {
-    std::filesystem::directory_options directoryOptions = std::filesystem::directory_options::skip_permission_denied;
+    const std::filesystem::directory_options directoryOptions = std::filesystem::directory_options::skip_permission_denied;
     Path currentIteratedPath = "";
     
     for(std::filesystem::directory_entry i : IteratorType(path, directoryOptions, m_LastError)) // May throw std::bad_alloc

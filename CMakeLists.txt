@@ -64,12 +64,14 @@ add_executable("${PROJECT_NAME}"
     include/DirStatsTUIVersion.hpp
     include/PlatformMacros.hpp
 	include/Main.hpp
+	include/MessageBox.hpp
 	include/App.hpp
-	include/MenuComponent.h
+	include/MenuComponent.hpp
 	include/AppUI.hpp
 	include/FileSystem.hpp
     include/Error.hpp
 	src/Main.cpp
+	src/MessageBox.cpp
 	src/App.cpp
 	src/MenuComponent.cpp
 	src/AppUI.cpp
@@ -90,6 +92,13 @@ target_link_libraries(DirStatsTUI
   #PRIVATE ftxui::screen
   #PRIVATE ftxui::dom
   PRIVATE ftxui::component)
+
+###########################################################
+# macOS frameworks
+if (APPLE)
+    target_link_libraries(DirStatsTUI
+        PRIVATE "-framework CoreFoundation")
+endif()
 
 #############################################################
 # Optimization settings
