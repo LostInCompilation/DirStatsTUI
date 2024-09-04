@@ -96,8 +96,15 @@ target_link_libraries(DirStatsTUI
 ###########################################################
 # macOS frameworks
 if (APPLE)
-    target_link_libraries(DirStatsTUI
-        PRIVATE "-framework CoreFoundation")
+    target_link_libraries(DirStatsTUI PRIVATE "-framework CoreFoundation")
+endif()
+
+###########################################################
+# Linux frameworks
+if (UNIX AND NOT APPLE)
+    find_package(GTK REQUIRED)
+    target_include_directories(DirStatsTUI PRIVATE ${GTK_INCLUDE_DIR})
+    target_link_libraries(DirStatsTUI PRIVATE ${GTK_LIBRARIES})
 endif()
 
 #############################################################
