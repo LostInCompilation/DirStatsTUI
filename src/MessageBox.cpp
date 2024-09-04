@@ -102,11 +102,13 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
         return 1;
 }
 #elif defined(PLATFORM_LINUX)
+static void DummyCallback(GtkApplication* gtkApp, gpointer user_data) {}
+
 int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
 {
     // Create temporary GTK app as a hack
     GtkApplication* const gtkApp = gtk_application_new("org.DirStatsTUI.message_box", G_APPLICATION_FLAGS_NONE);
-    g_signal_connect(gtkApp, "activate", G_CALLBACK(dummy), nullptr);
+    g_signal_connect(gtkApp, "activate", G_CALLBACK(DummyCallback), nullptr);
     
     char* argv = "";
     g_application_run(G_APPLICATION(gtkApp), 0, &argv);
