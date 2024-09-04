@@ -42,11 +42,11 @@ option(FTXUI_ENABLE_INSTALL OFF)
 include(FetchContent)
 set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
 FetchContent_Declare(ftxui
-  GIT_REPOSITORY https://github.com/ArthurSonzogni/ftxui
-  GIT_TAG        v5.0.0
-  GIT_PROGRESS   TRUE
-  GIT_SHALLOW    TRUE
-  #EXCLUDE_FROM_ALL
+    GIT_REPOSITORY https://github.com/ArthurSonzogni/ftxui
+    GIT_TAG        v5.0.0
+    GIT_PROGRESS   TRUE
+    GIT_SHALLOW    TRUE
+    #EXCLUDE_FROM_ALL
 )
 FetchContent_MakeAvailable(ftxui)
 
@@ -88,7 +88,7 @@ configure_file("cmake additional/DirStatsTUIVersion.hpp.cmake" "${CMAKE_CURRENT_
 
 ###########################################################
 # Use FTXUI lib
-target_link_libraries(DirStatsTUI
+target_link_libraries("${PROJECT_NAME}"
   #PRIVATE ftxui::screen
   #PRIVATE ftxui::dom
   PRIVATE ftxui::component)
@@ -96,15 +96,17 @@ target_link_libraries(DirStatsTUI
 ###########################################################
 # macOS frameworks
 if (APPLE)
-    target_link_libraries(DirStatsTUI PRIVATE "-framework CoreFoundation")
+    target_link_libraries("${PROJECT_NAME}" PRIVATE "-framework CoreFoundation")
 endif()
 
 ###########################################################
 # Linux frameworks
 if (UNIX AND NOT APPLE)
-    find_package(GTK REQUIRED)
-    target_include_directories(DirStatsTUI PRIVATE ${GTK_INCLUDE_DIR})
-    target_link_libraries(DirStatsTUI PRIVATE ${GTK_LIBRARIES})
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+    
+    target_include_directories("${PROJECT_NAME}" PRIVATE "${GTK3_INCLUDE_DIRS}")
+    target_link_libraries("${PROJECT_NAME}" PRIVATE "${GTK3_LIBRARY_DIRS}")
 endif()
 
 #############################################################
