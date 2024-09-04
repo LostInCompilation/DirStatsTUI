@@ -79,6 +79,7 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
             break;
     }
     
+    // Show MessageBox
     CFOptionFlags mbResult = 0;
     CFUserNotificationDisplayAlert(timeout,
                                    mbType,
@@ -101,6 +102,7 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
     else
         return 1;
 }
+
 #elif defined(PLATFORM_LINUX)
 static void DummyCallback(GtkApplication* gtkApp, gpointer user_data) {}
 
@@ -165,9 +167,75 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
     else
         return 1;
 }
+
 #elif defined(PLATFORM_WINDOWS)
 int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
 {
-#error Implement
+    // Convert (UTF-8) std::string to Windows UTF-16
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>> converter;
+    const std::wstring wHeader = converter.from_bytes(header);
+    const std::wstring wMessage = converter.from_bytes(message);
+    
+    // MessageBox type
+    uint32_t mbType = 0;
+    switch(type)
+    {
+        case Type::INFO:
+            mbType = MB_ICONINFORMATION;
+            break;
+        case Type::WARNING:
+            mbType = MB_ICONWARNING;
+            break;
+        case Type::ERROR:
+            mbType = MB_ICONERROR;
+            break;
+        default:
+            mbType = MB_ICONINFORMATION;
+            break;
+    }
+    
+    // Buttons
+    switch(buttons)
+    {
+        case Buttons::OK:
+            mbType |= MB_OK;
+            break;
+        case Buttons::OK_CANCEL:
+            mbType |= MB_OKCANCEL;
+            break;
+        case Buttons::YES_NO:
+            mbType |= MB_YESNO;
+            break;
+        default:
+            mbType |= MB_OK;
+            break;
+    }
+    
+    // Set as foreground window
+    mbType |= MB_SETFOREGROUND;
+    
+    int mbResult = 0;
+    const HMODULE hUser32 = LoadLibraryA("user32.dll");
+    if (hUser32)
+    {
+        typedef int(__stdcall *MSGBOXWAPI)(IN HWND hWnd, IN LPCWSTR lpText, IN LPCWSTR lpCaption, IN UINT uType, IN WORD wLanguageId, IN DWORD dwMilliseconds);
+        auto MessageBoxTimeoutW = (MSGBOXWAPI)GetProcAddress(hUser32, "MessageBoxTimeoutW");
+        
+        // Show MessageBox
+        mbResult = MessageBoxTimeoutW(nullptr, wMessage.c_str(), wHeader.c_str(), mbType, 0, timeout * 1000);
+        
+        FreeLibrary(hUser32);
+    }
+    else
+    {
+        // Fallback to MessageBox without timeout
+        mbResult = MessageBoxW(nullptr, wMessage.c_str(), wHeader.c_str(), mbType);
+    }
+    
+    // Return MessageBox result
+    if(mbResult == IDOK || mbResult == IDYES)
+        return 0;
+    else
+        return 1;
 }
 #endif
