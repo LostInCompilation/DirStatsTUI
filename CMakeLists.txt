@@ -106,7 +106,9 @@ if (UNIX AND NOT APPLE)
 	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
     
     target_include_directories("${PROJECT_NAME}" PRIVATE "${GTK3_INCLUDE_DIRS}")
-    target_link_libraries("${PROJECT_NAME}" PRIVATE "${GTK3_LIBRARY_DIRS}")
+    target_link_directories("${PROJECT_NAME}" PRIVATE "${GTK3_LIBRARY_DIRS}")
+    target_link_libraries("${PROJECT_NAME}" PRIVATE "${GTK3_LIBRARIES}")
+    target_compile_options("${PROJECT_NAME}" PRIVATE "${GTK3_CFLAGS_OTHER}")
 endif()
 
 #############################################################

@@ -104,6 +104,13 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
 #elif defined(PLATFORM_LINUX)
 int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
 {
+    // Create temporary GTK app as a hack
+    GtkApplication* const gtkApp = gtk_application_new("org.DirStatsTUI.message_box", G_APPLICATION_FLAGS_NONE);
+    g_signal_connect(gtkApp, "activate", G_CALLBACK(dummy), nullptr);
+    
+    char* argv = "";
+    g_application_run(G_APPLICATION(gtkApp), 0, &argv);
+    
     // MessageBox type
     GtkMessageType mbType;
     switch(type)
@@ -147,6 +154,9 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
     const gint mbResult = gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
 
+    // Destroy GTK app
+    g_object_unref(gtkApp);
+    
     // Return MessageBox result
     if(mbResult == GTK_RESPONSE_OK || mbResult == GTK_RESPONSE_YES)
         return 0;
