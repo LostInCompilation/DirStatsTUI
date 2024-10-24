@@ -116,7 +116,7 @@ int32_t Display(const Type& type, const Buttons& buttons, const std::string& hea
 #elif defined(PLATFORM_LINUX)
 void DummyCallback(GtkApplication* gtkApp, gpointer user_data) {}
 
-int32_t Show(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
+int32_t Display(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
 {
     // Create temporary GTK app as a dirty workaround
     GtkApplication* const gtkApp = gtk_application_new("org.DirStatsTUI.message_box", G_APPLICATION_FLAGS_NONE);
