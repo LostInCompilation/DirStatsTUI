@@ -34,26 +34,37 @@ the following restrictions:
 #ifndef MessageBox_hpp
 #define MessageBox_hpp
 
-class MessageBox
+namespace MessageBox
 {
-public:
-    enum class Type
+    enum class Type : uint8_t
     {
-        INFO,
+        INFO = 0,
         WARNING,
         ERROR
     };
     
-    enum class Buttons
+    enum class Buttons : uint8_t
     {
-        OK,
+        OK = 0,
         OK_CANCEL,
         YES_NO
     };
-    
-    MessageBox() = delete;
-    
-    static int32_t Show(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout = 0);
+
+    /*
+     Display()
+     
+     type:      The icon to display
+     buttons:   The type of buttons to display
+     header:    The header string
+     message:   The message string
+     timeout:   The timeout in seconds until the MessageBox closes by itself. Set to zero for no timeout. Not supported on linux.
+     
+     Return value:
+        -1: Error while displaying message box
+        0:  Default button got pressed (OK or YES)
+        1:  Second button got pressed (CANCEL or NO)
+     */
+    int32_t Display(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout = 0);
 };
 
 #endif /* MessageBox_hpp */

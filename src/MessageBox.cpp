@@ -33,14 +33,20 @@ the following restrictions:
 
 #include "Main.hpp"
 
+namespace MessageBox
+{
 #ifdef PLATFORM_APPLE
-int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
+int32_t Display(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
 {
     // Convert to CFStringRef
     const CFStringRef headerStr = CFStringCreateWithCString(nullptr, header.c_str(), static_cast<CFStringEncoding>(header.length()));
     const CFStringRef messageStr = CFStringCreateWithCString(nullptr, message.c_str(), static_cast<CFStringEncoding>(message.length()));
     
-    // MessageBox type
+    // Check for error
+    if(!headerStr || !messageStr)
+        return -1;
+    
+    // Message box type
     CFOptionFlags mbType = 0;
     switch(type)
     {
@@ -79,24 +85,28 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
             break;
     }
     
-    // Show MessageBox
+    // Show message box
     CFOptionFlags mbResult = 0;
-    CFUserNotificationDisplayAlert(timeout,
-                                   mbType,
-                                   nullptr, // Icon
-                                   nullptr,
-                                   nullptr,
-                                   headerStr,
-                                   messageStr,
-                                   defaultBtn,
-                                   secondBtn,
-                                   nullptr, // Third button
-                                   &mbResult);
+    const int32_t ret = CFUserNotificationDisplayAlert(timeout,
+                                                       mbType,
+                                                       nullptr, // Icon
+                                                       nullptr,
+                                                       nullptr,
+                                                       headerStr,
+                                                       messageStr,
+                                                       defaultBtn,
+                                                       secondBtn,
+                                                       nullptr, // Third button
+                                                       &mbResult);
     
     CFRelease(headerStr);
     CFRelease(messageStr);
     
-    // Return MessageBox result
+    // Check for error
+    if(ret != 0)
+        return -1;
+    
+    // Return message box result
     if(mbResult == kCFUserNotificationDefaultResponse)
         return 0;
     else
@@ -104,18 +114,18 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
 }
 
 #elif defined(PLATFORM_LINUX)
-static void DummyCallback(GtkApplication* gtkApp, gpointer user_data) {}
+void DummyCallback(GtkApplication* gtkApp, gpointer user_data) {}
 
-int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
+int32_t Show(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
 {
-    // Create temporary GTK app as a hack
+    // Create temporary GTK app as a dirty workaround
     GtkApplication* const gtkApp = gtk_application_new("org.DirStatsTUI.message_box", G_APPLICATION_FLAGS_NONE);
     g_signal_connect(gtkApp, "activate", G_CALLBACK(DummyCallback), nullptr);
     
     char* argv = "";
     g_application_run(G_APPLICATION(gtkApp), 0, &argv);
     
-    // MessageBox type
+    // Message box type
     GtkMessageType mbType;
     switch(type)
     {
@@ -157,11 +167,11 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
     // Show dialog
     const gint mbResult = gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
-
+    
     // Destroy GTK app
     g_object_unref(gtkApp);
     
-    // Return MessageBox result
+    // Return message box result
     if(mbResult == GTK_RESPONSE_OK || mbResult == GTK_RESPONSE_YES)
         return 0;
     else
@@ -169,14 +179,14 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
 }
 
 #elif defined(PLATFORM_WINDOWS)
-int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
+int32_t Display(const Type& type, const Buttons& buttons, const std::string& header, const std::string& message, uint32_t timeout)
 {
     // Convert (UTF-8) std::string to Windows UTF-16
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     const std::wstring wHeader = converter.from_bytes(header);
     const std::wstring wMessage = converter.from_bytes(message);
     
-    // MessageBox type
+    // Message box type
     uint32_t mbType = 0;
     switch(type)
     {
@@ -216,27 +226,40 @@ int32_t MessageBox::Show(const Type& type, const Buttons& buttons, const std::st
     mbType |= MB_SETFOREGROUND;
     
     int mbResult = 0;
-    const HMODULE hUser32 = LoadLibraryA("user32.dll");
-    if (hUser32)
+    
+    // Do we have a timeout set?
+    if(timeout == 0)
     {
-        typedef int(__stdcall *MSGBOXWAPI)(IN HWND hWnd, IN LPCWSTR lpText, IN LPCWSTR lpCaption, IN UINT uType, IN WORD wLanguageId, IN DWORD dwMilliseconds);
-        auto MessageBoxTimeoutW = (MSGBOXWAPI)GetProcAddress(hUser32, "MessageBoxTimeoutW");
-        
-        // Show MessageBox
-        mbResult = MessageBoxTimeoutW(nullptr, wMessage.c_str(), wHeader.c_str(), mbType, 0, timeout * 1000);
-        
-        FreeLibrary(hUser32);
+        // No timeout
+        mbResult = ::MessageBoxW(nullptr, wMessage.c_str(), wHeader.c_str(), mbType);
     }
     else
     {
-        // Fallback to MessageBox without timeout
-        mbResult = ::MessageBoxW(nullptr, wMessage.c_str(), wHeader.c_str(), mbType);
+        // Load system lib
+        const HMODULE hUser32 = LoadLibraryA("user32.dll");
+        if (hUser32)
+        {
+            // Get function address
+            typedef int(__stdcall* MSGBOXWAPI)(IN HWND hWnd, IN LPCWSTR lpText, IN LPCWSTR lpCaption, IN UINT uType, IN WORD wLanguageId, IN DWORD dwMilliseconds);
+            auto MessageBoxTimeoutW = (MSGBOXWAPI)GetProcAddress(hUser32, "MessageBoxTimeoutW");
+            
+            // Show MessageBox
+            mbResult = MessageBoxTimeoutW(nullptr, wMessage.c_str(), wHeader.c_str(), mbType, 0, timeout * 1000);
+            
+            FreeLibrary(hUser32);
+        }
+        else
+        {
+            // Fallback to MessageBox without timeout
+            mbResult = ::MessageBoxW(nullptr, wMessage.c_str(), wHeader.c_str(), mbType);
+        }
     }
     
-    // Return MessageBox result
+    // Return message box result
     if(mbResult == IDOK || mbResult == IDYES)
         return 0;
     else
         return 1;
 }
 #endif
+}

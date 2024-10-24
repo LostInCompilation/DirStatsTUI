@@ -35,7 +35,7 @@ the following restrictions:
 
 int main(int argc, char** argv)
 {
-    MessageBox::Show(MessageBox::Type::INFO, MessageBox::Buttons::OK, "Header", "Message", 0);
+    MessageBox::Display(MessageBox::Type::INFO, MessageBox::Buttons::OK_CANCEL, "Header", "Message", 3);
     return 0;
     
     // Create App and run it
